@@ -6,4 +6,4 @@ metadata:
 data:
   POSTGRES_DB: reservas
   POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: sarasti1907
+  POSTGRES_PASSWORD: xxxxxxxxx
