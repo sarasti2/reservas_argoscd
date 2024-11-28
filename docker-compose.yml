@@ -1,0 +1,14 @@
+name: gestion-reservas-virtual
+services:
+  springboot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8015:8015"
+    networks:
+      - my_bridge_network
+
+networks:
+  my_bridge_network:
+    external: true

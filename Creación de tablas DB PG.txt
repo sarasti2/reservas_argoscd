@@ -1,0 +1,83 @@
+-- Tabla Pasajero (debe crearse antes de 'reserva')
+CREATE TABLE pasajero (
+    id_pasajero SERIAL PRIMARY KEY,
+    id_reserva INT,
+    nombre_pasajero VARCHAR(50),
+    apellido_pasajero VARCHAR(50),
+    tipo_documento VARCHAR(10),
+    numero_documento INT,
+    telefono_contacto INT,
+    correo_contacto VARCHAR(50)
+);
+
+-- Tabla Reserva (creada al final, pues depende de varias tablas)
+CREATE TABLE reserva (
+    id_reserva SERIAL PRIMARY KEY,
+    id_cliente INT,
+    id_vuelo INT,
+    id_pago INT,
+    telefono_contacto INT,
+    correo_contacto VARCHAR(50),
+    fecha_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    estado_reserva VARCHAR(20) CHECK (estado_reserva IN ('confirmada', 'cancelada', 'pendiente'))
+);
+
+-- Tabla intermedia para relacionar Reserva y Pasajero
+CREATE TABLE reserva_pasajero (
+    id_reserva INT REFERENCES reserva(id_reserva) ON DELETE CASCADE,
+    id_pasajero INT REFERENCES pasajero(id_pasajero) ON DELETE CASCADE,
+    PRIMARY KEY (id_reserva, id_pasajero)
+);
+
+-- Función del Trigger: Validar máximo de 10 pasajeros por reserva
+CREATE OR REPLACE FUNCTION validar_max_pasajeros()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Contar el número de pasajeros asociados a la reserva
+    IF (SELECT COUNT(*) FROM reserva_pasajero WHERE id_reserva = NEW.id_reserva) >= 10 THEN
+        RAISE EXCEPTION 'No se pueden agregar más de 10 pasajeros a una reserva.';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para validar el máximo de pasajeros 
+CREATE TRIGGER trigger_validar_max_pasajeros
+BEFORE INSERT ON reserva_pasajero
+FOR EACH ROW
+EXECUTE FUNCTION validar_max_pasajeros();
+
+-- Función del Trigger: Actualizar estado de la reserva cuando se eliminan todos los pasajeros
+CREATE OR REPLACE FUNCTION actualizar_estado_reserva()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Verificar si la reserva ya no tiene pasajeros asociados
+    IF NOT EXISTS (SELECT 1 FROM reserva_pasajero WHERE id_reserva = OLD.id_reserva) THEN
+        UPDATE reserva
+        SET estado_reserva = 'cancelada'
+        WHERE id_reserva = OLD.id_reserva;
+    END IF;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para actualizar el estado de la reserva
+CREATE TRIGGER trigger_actualizar_estado_reserva
+AFTER DELETE ON reserva_pasajero
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_estado_reserva();
+
+-- Trigger Actualizar el contacto en la tabla 'reserva' si se modifica en 'pasajero'
+CREATE OR REPLACE FUNCTION actualizar_contacto_reserva()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar el contacto en la tabla 'reserva' si se modifica en 'pasajero'
+    UPDATE reserva
+    SET telefono_contacto = NEW.telefono_contacto,
+        correo_contacto = NEW.correo_contacto
+    WHERE id_reserva = NEW.id_reserva;
+
+    RETURN NEW;
+END;

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vuelos2024-deployment
+  labels:
+    app: vuelos2024
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vuelos2024
+  template:
+    metadata:
+      labels:
+        app: vuelos2024
+    spec:
+      containers:
+        - name: vuelos2024-app
+          image: gestion-reservas-virtual:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8015
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-service:5432/reservas
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: postgres-config
+                  key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vuelos2024-service
+spec:
+  ports:
+    - port: 8015
+      targetPort: 8015
+  selector:
+    app: vuelos2024
+  type: ClusterIP

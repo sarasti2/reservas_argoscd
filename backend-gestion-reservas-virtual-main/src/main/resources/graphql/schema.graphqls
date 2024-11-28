@@ -1,0 +1,64 @@
+type Reserva {
+    idReserva: ID!
+    idCliente: Int!
+    idVuelo: Int!
+    idPago: Int
+    telefonoContacto: Int
+    correoContacto: String
+    fechaReserva: String
+    estadoReserva: String!
+    pasajeros: [Pasajero!]!
+}
+
+type Pasajero {
+    idPasajero: ID
+    nombrePasajero: String
+    apellidoPasajero: String
+    tipoDocumento: String
+    numeroDocumento: String
+    telefonoContacto: String
+    correoContacto: String
+}
+
+type Query {
+    listarReservas: [Reserva!]!
+    consultarReserva(id: ID!): Reserva
+    consultarReservasPorCliente(idCliente: Int!): [Reserva!]!
+}
+
+type Mutation {
+    crearReserva(
+        idCliente: Int!
+        idVuelo: Int!
+        idPago: Int!
+        telefonoContacto: Int!
+        correoContacto: String!
+        estadoReserva: String!
+        pasajeros: [PasajeroInput!]!
+    ): Reserva
+
+    editarContactoReserva(idReserva: ID!, telefonoContacto: Int!, correoContacto: String!): Reserva
+
+    editarPasajeros(idReserva: ID!, pasajeros: [PasajeroEditInput!]!): Reserva
+
+    cancelarReserva(idReserva: ID!): Reserva
+}
+
+input PasajeroInput {
+    nombrePasajero: String!
+    apellidoPasajero: String!
+    tipoDocumento: String!
+    numeroDocumento: String!
+    telefonoContacto: String!
+    correoContacto: String!
+}
+
+input PasajeroEditInput {
+    idPasajero: ID!
+    nombrePasajero: String!
+    apellidoPasajero: String!
+    tipoDocumento: String!
+    numeroDocumento: String!
+    telefonoContacto: String!
+    correoContacto: String!
+}
