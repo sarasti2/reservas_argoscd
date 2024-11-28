@@ -8,7 +8,7 @@ spec:
     server: https://kubernetes.default.svc
     namespace: default
   source:
-    repoURL: https://github.com/tu-usuario/tu-repo.git # Cambia esto por tu URL de Git
+    repoURL: https://github.com/sarasti2/reservas_argoscd # Cambia esto por tu URL de Git
     targetRevision: HEAD
     path: manifests
   project: default
